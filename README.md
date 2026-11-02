@@ -77,6 +77,17 @@ DATABASE_URL="postgresql://reservation_salles_app.<REF_PROJET>:<MOT_DE_PASSE>@<H
 
 Supabase n'est utilisé **que comme base PostgreSQL** : aucune dépendance à son SDK, son auth ou ses e-mails. Le passage à Scaleway se fait en changeant `DATABASE_URL`.
 
+## Hébergement de test (Render, sans rien installer)
+
+Le fichier `render.yaml` décrit le service : offre gratuite, région Francfort, déploiement automatique à chaque mise à jour de `main`.
+
+1. Créer un compte sur [render.com](https://render.com) avec le compte GitHub.
+2. **New → Blueprint**, choisir le dépôt `SICAAP_salles`.
+3. Renseigner `DATABASE_URL` (base Supabase cloisonnée) et `APP_URL` (adresse donnée par Render, ex. `https://sicaap-salles.onrender.com`).
+4. Valider : l'application est en ligne après quelques minutes.
+
+Offre gratuite : mise en veille après 15 min sans visite (réveil en ~1 min).
+
 ## Déploiement Scaleway (via GitLab)
 
 L'application est livrée avec un `Dockerfile` (build Next.js *standalone*). Au démarrage, le conteneur applique les migrations puis lance le serveur.
