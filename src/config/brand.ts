@@ -7,5 +7,5 @@ export const BRAND = {
   appName: "SICAAP",
   appSubtitle: "Réservation des salles",
   /** Chemin du logo dans /public, ou null pour afficher le nom seul. */
-  logo: null as string | null,
+  logo: "/logo.png" as string | null,
 };

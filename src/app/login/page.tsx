@@ -7,9 +7,13 @@ export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/");
   return (
     <div className="auth card">
-      {BRAND.logo && <img src={BRAND.logo} alt={BRAND.appName} style={{ height: 48, marginBottom: 12 }} />}
-      <h1>{BRAND.appName}</h1>
-      <p className="muted">{BRAND.appSubtitle}</p>
+      <div className="auth-brand">
+        {BRAND.logo && <img src={BRAND.logo} alt={`Logo ${BRAND.appName}`} />}
+        <div>
+          <h1>{BRAND.appName}</h1>
+          <p className="muted">{BRAND.appSubtitle}</p>
+        </div>
+      </div>
       <LoginForm />
     </div>
   );
