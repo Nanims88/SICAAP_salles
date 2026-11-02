@@ -4,10 +4,10 @@ import { generateTemporaryPassword, hashPassword } from "../src/lib/password";
 const prisma = new PrismaClient();
 
 const ROOMS = [
-  { name: "Box 1", capacity: 2, color: "#0e7490", sortOrder: 1 },
-  { name: "Box 2", capacity: 2, color: "#7c3aed", sortOrder: 2 },
-  { name: "Petite salle", capacity: 6, color: "#16a34a", sortOrder: 3 },
-  { name: "Grande salle", capacity: 12, color: "#dc2626", sortOrder: 4 },
+  { name: "Box 1", capacity: 2, color: "#57cbbb", sortOrder: 1 },
+  { name: "Box 2", capacity: 2, color: "#f8ac16", sortOrder: 2 },
+  { name: "Petite salle", capacity: 6, color: "#044589", sortOrder: 3 },
+  { name: "Grande salle", capacity: 12, color: "#015959", sortOrder: 4 },
 ];
 
 async function main() {

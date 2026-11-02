@@ -104,7 +104,7 @@ L'application est livrée avec un `Dockerfile` (build Next.js *standalone*). Au 
 | `.env` | Base de données, admin initial, e-mails (voir `.env.example`) |
 | `src/config/settings.ts` | Horaires, granularité, jours ouvrés, délai max, durée de récurrence |
 | `src/config/brand.ts` | Nom affiché et logo (déposer le fichier dans `public/`) |
-| `src/app/theme.css` | Couleurs de la charte |
+| `src/app/theme.css` | Charte SICAAP : couleurs (Orange, Turquoise, Vert Abysse) et polices (Century Gothic, Calibri Light) |
 
 ### Activer l'envoi réel des e-mails (Microsoft 365)
 

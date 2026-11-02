@@ -6,6 +6,7 @@ import { SETTINGS } from "@/config/settings";
 import type { PlanningData, PlanningBooking } from "@/lib/planning";
 import { addDaysToKey, formatDateLong, parisDateKey, parisMinutesOfDay, parisTime } from "@/lib/time";
 import { BookingDialog, type DialogState } from "./BookingDialog";
+import { readableTextOn } from "@/lib/color";
 
 const SLOT_H = 26; // hauteur d'un créneau de 30 min, en pixels
 const OPEN = SETTINGS.openingHour * 60;
@@ -103,7 +104,7 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
             <div className="note">{d.holiday ?? d.closures.find((c) => c.roomId === null)?.reason ?? ""}</div>
             <div className="lanes-head" style={{ gridTemplateColumns: `repeat(${lanes}, 1fr)` }}>
               {data.rooms.map((r) => (
-                <span key={r.id} style={{ background: r.color }} title={r.name}>{r.name}</span>
+                <span key={r.id} style={{ background: r.color, color: readableTextOn(r.color) }} title={r.name}>{r.name}</span>
               ))}
             </div>
           </div>
@@ -150,7 +151,7 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
                       <div
                         key={b.id}
                         className={`booking${b.canManage ? "" : " other"}${b.mine ? " mine" : ""}`}
-                        style={{ top: topOf(sMin) + 1, height: Math.max(topOf(eMin) - topOf(sMin) - 2, 12), background: r.color }}
+                        style={{ top: topOf(sMin) + 1, height: Math.max(topOf(eMin) - topOf(sMin) - 2, 12), background: r.color, color: readableTextOn(r.color) }}
                         title={`${r.name} · ${label}`}
                         onClick={() => openEdit(b)}
                       >

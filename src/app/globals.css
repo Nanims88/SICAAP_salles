@@ -2,13 +2,15 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 15px; }
+h1, h2, .header .brand, .toolbar .title, .planning .day-head .name, .tabs a { font-family: var(--font-title); }
+strong, b, th, label, .badge { font-weight: 700; }
 a { color: var(--brand); }
 h1 { font-size: 20px; margin: 0; }
 h2 { font-size: 16px; margin: 0 0 12px; }
 
 /* En-tête */
-.header { background: var(--brand); color: var(--brand-contrast); display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 56px; }
+.header { background: var(--brand); color: var(--brand-contrast); display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 60px; border-bottom: 4px solid var(--accent); }
 .header .brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-weight: 700; font-size: 17px; }
 .header .brand img { height: 32px; }
 .header .brand small { font-weight: 400; opacity: .85; font-size: 14px; }
@@ -31,7 +33,7 @@ input[type="color"] { padding: 2px; height: 34px; width: 48px; }
 .row > * { flex: 1; }
 .inline { display: flex; align-items: center; gap: 8px; font-weight: 400; }
 
-button, .button { font: inherit; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--brand); background: var(--brand); color: var(--brand-contrast); cursor: pointer; text-decoration: none; display: inline-block; }
+button, .button { font: inherit; font-weight: 700; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--brand); background: var(--brand); color: var(--brand-contrast); cursor: pointer; text-decoration: none; display: inline-block; }
 button:hover, .button:hover { filter: brightness(1.1); }
 button:disabled { opacity: .6; cursor: default; }
 button.secondary, .button.secondary { background: #fff; color: var(--brand); }
@@ -54,13 +56,14 @@ table { width: 100%; border-collapse: collapse; background: var(--surface); }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 th { font-size: 12px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; background: var(--brand-soft); color: var(--brand); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .badge.off { background: var(--closed); color: var(--muted); }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
 
 /* Onglets admin */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
 .tabs a { padding: 8px 14px; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tabs a.active { color: var(--brand); border-color: var(--brand); font-weight: 600; }
+.tabs a.active { color: var(--brand); border-color: var(--accent); font-weight: 700; }
 .stack > * + * { margin-top: 20px; }
 
 /* Planning */
@@ -72,10 +75,11 @@ th { font-size: 12px; text-transform: uppercase; color: var(--muted); font-weigh
 .planning .corner { border-bottom: 1px solid var(--border); }
 .planning .day-head { border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); text-align: center; }
 .planning .day-head .name { font-weight: 600; padding: 6px 0 2px; text-transform: capitalize; }
-.planning .day-head.today .name { color: var(--accent); }
+.planning .day-head.today { background: var(--accent-soft); }
+.planning .day-head.today .name { color: var(--brand); text-decoration: underline 3px var(--accent); text-underline-offset: 4px; }
 .planning .day-head .note { font-size: 11px; color: var(--danger); min-height: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .planning .lanes-head { display: grid; border-top: 1px solid var(--border); }
-.planning .lanes-head span { font-size: 10px; padding: 3px 1px; color: #fff; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.planning .lanes-head span { font-size: 10px; padding: 3px 1px; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .planning .times { position: relative; }
 .planning .times div { position: absolute; right: 6px; font-size: 11px; color: var(--muted); transform: translateY(-50%); }
 .planning .day { position: relative; border-left: 1px solid var(--border); display: grid; }
@@ -88,10 +92,10 @@ th { font-size: 12px; text-transform: uppercase; color: var(--muted); font-weigh
 .planning .shade { position: absolute; left: 0; right: 0; pointer-events: none; }
 .planning .shade.past { background: rgba(240, 242, 245, .55); }
 .planning .shade.closed { background: repeating-linear-gradient(135deg, var(--closed), var(--closed) 6px, #f6f7f9 6px, #f6f7f9 12px); }
-.planning .booking { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 2px 4px; color: #fff; font-size: 11px; line-height: 1.25; overflow: hidden; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.planning .booking { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 2px 4px; font-size: 11px; line-height: 1.25; overflow: hidden; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
 .planning .booking.other { cursor: default; opacity: .78; }
-.planning .booking.mine { outline: 2px solid rgba(0,0,0,.35); outline-offset: -2px; }
-.planning .booking .who { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.planning .booking.mine { outline: 2px solid var(--text); outline-offset: -2px; }
+.planning .booking .who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .planning .booking .when, .planning .booking .what { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .95; }
 .planning .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--accent); z-index: 2; pointer-events: none; }
 
