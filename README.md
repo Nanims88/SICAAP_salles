@@ -52,13 +52,30 @@ set -a; . ./.env; set +a; npm test   # + test d'intégration PostgreSQL (anti-ch
 npm run lint                  # vérification TypeScript
 ```
 
-## Brancher Supabase (base de test)
+## Base de test Supabase (projet partagé, données cloisonnées)
 
-1. Créer un projet Supabase (région UE).
-2. Copier la chaîne de connexion (*Project Settings → Database → Connection string*, mode « Session pooler » ou « Direct »).
-3. La mettre dans `DATABASE_URL`, puis `npm run db:migrate && npm run db:seed`.
+La base de test est hébergée dans le projet Supabase **« Suivi temps travail »**, sans mélange avec ses données :
 
-Supabase n'est utilisé **que comme base PostgreSQL** : aucune dépendance à son SDK, son auth ou ses e-mails.
+| Élément | Valeur |
+|---|---|
+| Schéma | `reservation_salles` (les données du suivi du temps restent dans `public`) |
+| Rôle PostgreSQL | `reservation_salles_app` : propriétaire de son schéma, **aucun accès** aux tables de `public` ni droit d'y créer quoi que ce soit |
+| API Supabase | schéma **non exposé** : `anon` et `authenticated` n'y ont aucun accès |
+| Historique des migrations | table `_prisma_migrations` propre au schéma (l'historique Supabase du projet n'est pas touché) |
+
+Installation (déjà faite sur le projet de test) : script [`docs/supabase-cloisonnement.sql`](docs/supabase-cloisonnement.sql), puis `npm run db:migrate` et `npm run db:seed` avec la chaîne de connexion du rôle dédié.
+
+Chaîne de connexion (mode **Session pooler**, compatible IPv4) :
+
+```env
+DATABASE_URL="postgresql://reservation_salles_app.<REF_PROJET>:<MOT_DE_PASSE>@<HOTE_POOLER>:5432/postgres?schema=reservation_salles"
+```
+
+- `<HOTE_POOLER>` : bouton **Connect** du projet Supabase → *Session pooler* ;
+- le paramètre `?schema=reservation_salles` est **indispensable** ;
+- mot de passe perdu : `alter role reservation_salles_app password '…';` dans le SQL Editor.
+
+Supabase n'est utilisé **que comme base PostgreSQL** : aucune dépendance à son SDK, son auth ou ses e-mails. Le passage à Scaleway se fait en changeant `DATABASE_URL`.
 
 ## Déploiement Scaleway (via GitLab)
 
