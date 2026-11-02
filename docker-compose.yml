@@ -1,0 +1,35 @@
+# Environnement complet en local : PostgreSQL + application.
+#   docker compose up -d --build
+#   docker compose exec app npx prisma db seed   (première fois : salles + admin)
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sicaap
+      POSTGRES_PASSWORD: sicaap
+      POSTGRES_DB: sicaap_salles
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sicaap"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://sicaap:sicaap@db:5432/sicaap_salles
+      MAIL_TRANSPORT: console
+      MAIL_FROM: "Réservations SICAAP <reservations@sicaap.com>"
+      APP_URL: http://localhost:3000
+      SEED_ADMIN_EMAIL: a.texier@sicaap.com
+    ports:
+      - "3000:3000"
+
+volumes:
+  db-data:
