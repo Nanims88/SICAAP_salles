@@ -1,24 +1,37 @@
 /*
- * Charte graphique — à personnaliser avec les couleurs SICAAP.
+ * Charte graphique SICAAP (nouvelle identité visuelle).
  * Seules ces variables sont à modifier ; le reste de l'interface s'y adapte.
+ *
+ * Couleurs principales : Orange #f8ac16 · Turquoise #57cbbb · Vert Abysse #015959
+ * Typographies         : Century Gothic (titres) · Calibri Light (texte)
  */
 :root {
-  --brand: #1f4e79;          /* couleur principale (en-tête, boutons) */
-  --brand-contrast: #ffffff; /* texte sur la couleur principale */
-  --brand-soft: #e8eff7;     /* fonds légers (survols, sélection) */
-  --accent: #d97706;         /* mise en avant (aujourd'hui) */
+  /* Couleurs principales */
+  --sicaap-orange: #f8ac16;
+  --sicaap-turquoise: #57cbbb;
+  --sicaap-abysse: #015959;
 
-  --bg: #f6f7f9;
+  /* Rôles dans l'interface */
+  --brand: var(--sicaap-abysse);   /* en-tête, boutons, liens */
+  --brand-contrast: #ffffff;       /* texte sur la couleur principale */
+  --brand-soft: #e3f5f2;           /* survols, sélection (turquoise très clair) */
+  --accent: var(--sicaap-orange);  /* aujourd'hui, heure actuelle */
+  --accent-soft: #fff6d1;          /* fond du jour courant (secondaire) */
+
+  --bg: #f6f8f8;
   --surface: #ffffff;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --danger: #b91c1c;
-  --danger-soft: #fee2e2;
-  --success: #15803d;
-  --success-soft: #dcfce7;
-  --closed: #eceef1;
+  --text: #2f3e47;                 /* gris anthracite (complémentaire) */
+  --muted: #6c7a83;
+  --border: #e1e6e8;
+  --danger: #b4232f;
+  --danger-soft: #ffe4e6;
+  --success: #18614c;              /* vert (secondaire) */
+  --success-soft: #e3f5ec;
+  --closed: #eceff1;
 
   --radius: 8px;
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Polices de la charte, présentes sur les postes Windows / Office.
+     Repli sur des équivalents libres (URW Gothic, Carlito) puis polices système. */
+  --font-title: "Century Gothic", "URW Gothic", "URW Gothic L", "Avant Garde", "Didact Gothic", system-ui, sans-serif;
+  --font-body: "Calibri Light", "Calibri", "Carlito", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
