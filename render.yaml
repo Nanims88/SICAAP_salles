@@ -1,0 +1,25 @@
+# Hébergement de test sur Render (offre gratuite) — https://render.com
+# Render lit ce fichier (« Blueprint ») et crée le service automatiquement.
+# Les valeurs marquées « sync: false » sont demandées lors de la création.
+services:
+  - type: web
+    name: sicaap-salles
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci && npm run build
+    # Applique les éventuelles nouvelles migrations, puis démarre l'application.
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: MAIL_TRANSPORT
+        value: console
+      - key: MAIL_FROM
+        value: "Réservations SICAAP <reservations@sicaap.com>"
