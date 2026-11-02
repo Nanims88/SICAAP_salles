@@ -1,0 +1,24 @@
+/*
+ * Charte graphique — à personnaliser avec les couleurs SICAAP.
+ * Seules ces variables sont à modifier ; le reste de l'interface s'y adapte.
+ */
+:root {
+  --brand: #1f4e79;          /* couleur principale (en-tête, boutons) */
+  --brand-contrast: #ffffff; /* texte sur la couleur principale */
+  --brand-soft: #e8eff7;     /* fonds légers (survols, sélection) */
+  --accent: #d97706;         /* mise en avant (aujourd'hui) */
+
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --closed: #eceef1;
+
+  --radius: 8px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}

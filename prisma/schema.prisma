@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String
+  passwordHash       String
+  role               Role      @default(USER)
+  active             Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  bookings           Booking[] @relation("BookingOwner")
+  sessions           Session[]
+}
+
+model Session {
+  /// Empreinte SHA-256 du jeton stocké dans le cookie (le jeton brut n'est jamais stocké).
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+}
+
+model Room {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  capacity  Int
+  /// Couleur d'affichage dans le planning (hexadécimal, ex. #2563eb).
+  color     String
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  bookings  Booking[]
+  closures  Closure[]
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  roomId        String
+  room          Room          @relation(fields: [roomId], references: [id])
+  ownerId       String
+  owner         User          @relation("BookingOwner", fields: [ownerId], references: [id])
+  /// Objet de la réservation : visible uniquement par l'auteur et les admins.
+  title         String?
+  start         DateTime      @db.Timestamptz(3)
+  end           DateTime      @db.Timestamptz(3)
+  status        BookingStatus @default(CONFIRMED)
+  /// Identifiant commun aux occurrences d'une réservation récurrente.
+  seriesId      String?
+  /// Début initial de l'occurrence dans la série (RECURRENCE-ID des invitations .ics).
+  originalStart DateTime?     @db.Timestamptz(3)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([roomId, start])
+  @@index([seriesId])
+  @@index([ownerId])
+}
+
+/// Fermeture exceptionnelle (une salle ou toutes si roomId est vide), dates incluses.
+model Closure {
+  id        String   @id @default(cuid())
+  roomId    String?
+  room      Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  reason    String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
