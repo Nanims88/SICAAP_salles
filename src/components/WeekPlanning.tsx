@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SETTINGS } from "@/config/settings";
 import type { PlanningData, PlanningBooking } from "@/lib/planning";
-import { addDaysToKey, formatDateLong, parisDateKey, parisMinutesOfDay, parisTime } from "@/lib/time";
-import { BookingDialog, type DialogState } from "./BookingDialog";
 import { readableTextOn } from "@/lib/color";
+import { addDaysToKey, formatDateLong, isoWeekday, parisDateKey, parisMinutesOfDay, parisTime } from "@/lib/time";
+import { BookingDialog, type DialogState } from "./BookingDialog";
+import { RoomIcon } from "./RoomIcon";
 
-const SLOT_H = 26; // hauteur d'un créneau de 30 min, en pixels
+const SLOT_H = 28; // hauteur d'un créneau de 30 min, en pixels
 const OPEN = SETTINGS.openingHour * 60;
 const CLOSE = SETTINGS.closingHour * 60;
 const STEP = SETTINGS.slotMinutes;
 const SLOTS = (CLOSE - OPEN) / STEP;
+const CONFETTI_COLORS = ["#f8ac16", "#57cbbb", "#015959", "#ffdc20", "#85d4b1", "#0086ff"];
 
 function toHHMM(min: number): string {
   return `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
@@ -22,11 +24,37 @@ function topOf(min: number): number {
   return ((min - OPEN) / STEP) * SLOT_H;
 }
 
-export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningData; isAdmin: boolean; currentUserId: string }) {
+function dayParts(key: string): { name: string; num: number } {
+  const [y, m, d] = key.split("-").map(Number);
+  const name = new Intl.DateTimeFormat("fr-FR", { weekday: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(y, m - 1, d)))
+    .replace(".", "");
+  return { name, num: d };
+}
+
+function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name;
+}
+
+interface Props {
+  data: PlanningData;
+  isAdmin: boolean;
+  currentUserId: string;
+  userName: string;
+}
+
+export function WeekPlanning({ data, isAdmin, currentUserId, userName }: Props) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [toast, setToast] = useState<{ text: string; emoji: string; id: number } | null>(null);
   const now = new Date(data.now);
   const today = parisDateKey(now);
   const nowMin = parisMinutesOfDay(now);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3200);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const bookingsByCell = useMemo(() => {
     const map = new Map<string, PlanningBooking[]>();
@@ -36,6 +64,16 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
     }
     return map;
   }, [data.bookings]);
+
+  // Petites statistiques de l'accueil
+  const mine = data.bookings.filter((b) => b.mine);
+  const nextMine = mine.find((b) => new Date(b.end) > now);
+  const todayVisible = data.days.some((d) => d.key === today);
+  const openNow = todayVisible && nowMin >= OPEN && nowMin < CLOSE && SETTINGS.openDays.includes(isoWeekday(today));
+  const busyNow = new Set(
+    data.bookings.filter((b) => new Date(b.start) <= now && new Date(b.end) > now).map((b) => b.roomId),
+  );
+  const freeNow = data.rooms.filter((r) => !busyNow.has(r.id)).length;
 
   const lastDay = data.days[data.days.length - 1].key;
   const lanes = data.rooms.length || 1;
@@ -58,6 +96,18 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
     });
   }
 
+  /** Bouton « Réserver » : prochain créneau ouvré à venir. */
+  function openQuickCreate() {
+    let day = today;
+    let start = Math.max(OPEN, Math.ceil((nowMin + 1) / STEP) * STEP);
+    if (!SETTINGS.openDays.includes(isoWeekday(day)) || start > CLOSE - 60) {
+      do day = addDaysToKey(day, 1);
+      while (!SETTINGS.openDays.includes(isoWeekday(day)));
+      start = 9 * 60;
+    }
+    openCreate(day, data.rooms[0]?.id ?? "", start);
+  }
+
   function openEdit(b: PlanningBooking) {
     if (!b.canManage) return;
     const s = new Date(b.start);
@@ -76,39 +126,98 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
     });
   }
 
+  function onDone(kind: "created" | "updated" | "cancelled", message?: string) {
+    const presets = {
+      created: { emoji: "🎉", text: "C'est réservé !" },
+      updated: { emoji: "✨", text: "Réservation modifiée" },
+      cancelled: { emoji: "👋", text: "Réservation annulée" },
+    } as const;
+    const p = presets[kind];
+    setToast({ emoji: p.emoji, text: message && kind === "created" && message !== "Réservation confirmée." ? message : p.text, id: Date.now() });
+  }
+
   return (
     <>
+      <section className="hero">
+        <div>
+          <h1 className="hello">
+            Bonjour {firstName(userName)} <span className="wave" aria-hidden="true">👋</span>
+          </h1>
+          <p className="hero-sub">Quel espace vous faut-il aujourd&apos;hui ?</p>
+        </div>
+        <div className="stats">
+          <div className="stat">
+            <span className="bubble" style={{ background: "var(--accent-soft)" }} aria-hidden="true">📅</span>
+            <div>
+              <div className="value">{mine.length}</div>
+              <div className="label">réservation{mine.length > 1 ? "s" : ""} cette semaine</div>
+            </div>
+          </div>
+          <div className="stat">
+            <span className="bubble" style={{ background: "var(--brand-soft)" }} aria-hidden="true">⏭️</span>
+            <div>
+              <div className="value">{nextMine ? parisTime(new Date(nextMine.start)) : "—"}</div>
+              <div className="label">
+                {nextMine
+                  ? `${data.rooms.find((r) => r.id === nextMine.roomId)?.name ?? ""}, ${dayParts(parisDateKey(new Date(nextMine.start))).name} ${dayParts(parisDateKey(new Date(nextMine.start))).num}`
+                  : "aucune à venir"}
+              </div>
+            </div>
+          </div>
+          {openNow && (
+            <div className="stat">
+              <span className="bubble" style={{ background: "#e3f5ec" }} aria-hidden="true">🟢</span>
+              <div>
+                <div className="value">{freeNow}/{data.rooms.length}</div>
+                <div className="label">salles libres maintenant</div>
+              </div>
+            </div>
+          )}
+        </div>
+        <button type="button" className="cta" onClick={openQuickCreate}>
+          <span aria-hidden="true">＋</span> Réserver
+        </button>
+      </section>
+
       <div className="toolbar">
-        <Link className="button secondary" href={`/?semaine=${addDaysToKey(data.weekStart, -7)}`}>‹ Semaine précédente</Link>
-        <Link className="button secondary" href="/">Aujourd&apos;hui</Link>
-        <Link className="button secondary" href={`/?semaine=${addDaysToKey(data.weekStart, 7)}`}>Semaine suivante ›</Link>
-        <span className="title">
-          Du {formatDateLong(data.weekStart)} au {formatDateLong(lastDay)}
+        <div className="week-nav">
+          <Link className="round" href={`/?semaine=${addDaysToKey(data.weekStart, -7)}`} aria-label="Semaine précédente">‹</Link>
+          <Link href="/">Aujourd&apos;hui</Link>
+          <Link className="round" href={`/?semaine=${addDaysToKey(data.weekStart, 7)}`} aria-label="Semaine suivante">›</Link>
+        </div>
+        <span className="week-title">
+          {formatDateLong(data.weekStart).replace(/^\w+ /, "")} → {formatDateLong(lastDay).replace(/^\w+ /, "")}
         </span>
         <div className="legend">
           {data.rooms.map((r) => (
-            <span key={r.id}>
-              <span className="swatch" style={{ background: r.color }} />
-              {r.name} <span className="muted">({r.capacity} pers.)</span>
+            <span key={r.id} className="chip">
+              <span className="dot" style={{ background: r.color, color: readableTextOn(r.color) }}>
+                <RoomIcon capacity={r.capacity} />
+              </span>
+              {r.name} <span className="cap">· {r.capacity} pers.</span>
             </span>
           ))}
         </div>
       </div>
 
-      <div className="planning" style={{ gridTemplateColumns: `52px repeat(${data.days.length}, 1fr)` }}>
+      <div className="planning" style={{ gridTemplateColumns: `56px repeat(${data.days.length}, 1fr)` }}>
         {/* En-têtes */}
         <div className="corner" />
-        {data.days.map((d) => (
-          <div key={d.key} className={`day-head${d.key === today ? " today" : ""}`}>
-            <div className="name">{d.label}</div>
-            <div className="note">{d.holiday ?? d.closures.find((c) => c.roomId === null)?.reason ?? ""}</div>
-            <div className="lanes-head" style={{ gridTemplateColumns: `repeat(${lanes}, 1fr)` }}>
-              {data.rooms.map((r) => (
-                <span key={r.id} style={{ background: r.color, color: readableTextOn(r.color) }} title={r.name}>{r.name}</span>
-              ))}
+        {data.days.map((d) => {
+          const p = dayParts(d.key);
+          return (
+            <div key={d.key} className={`day-head${d.key === today ? " today" : ""}`}>
+              <div className="dname">{p.name}</div>
+              <div className="dnum">{p.num}</div>
+              <div className="note">{d.holiday ?? d.closures.find((c) => c.roomId === null)?.reason ?? ""}</div>
+              <div className="lanes-head" style={{ gridTemplateColumns: `repeat(${lanes}, 1fr)` }}>
+                {data.rooms.map((r) => (
+                  <span key={r.id} style={{ background: r.color, color: readableTextOn(r.color) }} title={r.name}>{r.name}</span>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Heures */}
         <div className="times" style={{ height: SLOTS * SLOT_H }}>
@@ -119,7 +228,11 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
 
         {/* Jours × salles */}
         {data.days.map((d) => (
-          <div key={d.key} className="day" style={{ gridTemplateColumns: `repeat(${lanes}, 1fr)`, height: SLOTS * SLOT_H }}>
+          <div
+            key={d.key}
+            className={`day${d.key === today ? " today-col" : ""}`}
+            style={{ gridTemplateColumns: `repeat(${lanes}, 1fr)`, height: SLOTS * SLOT_H }}
+          >
             {data.rooms.map((r) => {
               const closed = isClosed(d.key, r.id);
               const pastUntil = d.key < today ? CLOSE : d.key === today ? Math.min(Math.max(nowMin, OPEN), CLOSE) : OPEN;
@@ -151,10 +264,16 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
                       <div
                         key={b.id}
                         className={`booking${b.canManage ? "" : " other"}${b.mine ? " mine" : ""}`}
-                        style={{ top: topOf(sMin) + 1, height: Math.max(topOf(eMin) - topOf(sMin) - 2, 12), background: r.color, color: readableTextOn(r.color) }}
+                        style={{
+                          top: topOf(sMin) + 2,
+                          height: Math.max(topOf(eMin) - topOf(sMin) - 4, 14),
+                          background: r.color,
+                          color: readableTextOn(r.color),
+                        }}
                         title={`${r.name} · ${label}`}
                         onClick={() => openEdit(b)}
                       >
+                        {b.mine && <span className="star" aria-label="Votre réservation">★</span>}
                         <div className="who">{b.isSeries ? "↻ " : ""}{b.ownerName}</div>
                         <div className="when">{parisTime(s)}–{parisTime(e)}</div>
                         {b.title && <div className="what">{b.title}</div>}
@@ -171,9 +290,9 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
         ))}
       </div>
 
-      <p className="muted" style={{ marginTop: 10 }}>
-        Cliquez sur un créneau libre pour réserver, ou sur l&apos;une de vos réservations pour la modifier ou l&apos;annuler.
-        Les réservations encadrées sont les vôtres.
+      <p className="hint">
+        <span aria-hidden="true">💡</span>
+        Cliquez sur un créneau libre pour réserver, ou sur une réservation marquée <kbd>★</kbd> pour la modifier.
       </p>
 
       {dialog && (
@@ -183,7 +302,32 @@ export function WeekPlanning({ data, isAdmin, currentUserId }: { data: PlanningD
           users={isAdmin ? data.users : []}
           currentUserId={currentUserId}
           onClose={() => setDialog(null)}
+          onDone={onDone}
         />
+      )}
+
+      {toast && (
+        <>
+          {toast.emoji === "🎉" && (
+            <div className="confetti" aria-hidden="true" key={`c${toast.id}`}>
+              {Array.from({ length: 36 }, (_, i) => (
+                <i
+                  key={i}
+                  style={{
+                    left: `${(i * 37) % 100}%`,
+                    background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                    animationDelay: `${(i % 9) * 0.05}s`,
+                    animationDuration: `${1.1 + (i % 5) * 0.15}s`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <div className="toast" role="status" key={toast.id}>
+            <span className="emoji" aria-hidden="true">{toast.emoji}</span>
+            {toast.text}
+          </div>
+        </>
       )}
     </>
   );

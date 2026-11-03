@@ -8,7 +8,7 @@ export default async function PasswordPage() {
   return (
     <>
       {!user.mustChangePassword && <Header user={user} />}
-      <div className="auth card">
+      <div className="auth-simple card">
         <h1>Changer de mot de passe</h1>
         {user.mustChangePassword && (
           <p className="alert success">Bienvenue {user.name} ! Choisissez votre mot de passe personnel pour continuer.</p>

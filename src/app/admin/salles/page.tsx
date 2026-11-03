@@ -5,6 +5,8 @@ import { saveRoomAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
+const GRID = "80px 1fr 110px 80px 80px 130px";
+
 export default async function RoomsPage({ searchParams }: { searchParams: Promise<{ erreur?: string }> }) {
   const { erreur } = await searchParams;
   const rooms = await prisma.room.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
@@ -15,12 +17,20 @@ export default async function RoomsPage({ searchParams }: { searchParams: Promis
       <div className="card">
         <h2>Salles ({rooms.length})</h2>
         <table>
-          <thead><tr><th>Ordre</th><th>Nom</th><th>Capacité</th><th>Couleur</th><th>Active</th><th /></tr></thead>
+          <thead>
+            <tr>
+              <th colSpan={6} style={{ padding: 0 }}>
+                <div style={{ display: "grid", gridTemplateColumns: GRID, gap: 10, padding: "8px 10px" }}>
+                  <span>Ordre</span><span>Nom</span><span>Capacité</span><span>Couleur</span><span>Active</span><span />
+                </div>
+              </th>
+            </tr>
+          </thead>
           <tbody>
             {rooms.map((r) => (
               <tr key={r.id}>
                 <td colSpan={6} style={{ padding: 0 }}>
-                  <form action={saveRoomAction} style={{ display: "grid", gridTemplateColumns: "80px 1fr 110px 80px 80px 120px", gap: 10, alignItems: "center", padding: "6px 10px" }}>
+                  <form action={saveRoomAction} style={{ display: "grid", gridTemplateColumns: GRID, gap: 10, alignItems: "center", padding: "6px 10px" }}>
                     <input type="hidden" name="id" value={r.id} />
                     <input name="sortOrder" type="number" min={0} defaultValue={r.sortOrder} />
                     <input name="name" defaultValue={r.name} required />
