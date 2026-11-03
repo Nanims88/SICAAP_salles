@@ -7,7 +7,10 @@ export function Header({ user }: { user: CurrentUser }) {
   return (
     <header className="header">
       <Link href="/" className="brand">
-        {BRAND.logo ? <img src={BRAND.logo} alt={BRAND.appName} /> : BRAND.appName}
+        {BRAND.logo && (
+          <span className="logo-badge"><img src={BRAND.logo} alt="" /></span>
+        )}
+        {BRAND.appName}
         <small>{BRAND.appSubtitle}</small>
       </Link>
       <nav>
