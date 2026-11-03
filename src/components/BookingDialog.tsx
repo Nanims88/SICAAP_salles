@@ -6,6 +6,8 @@ import { SETTINGS } from "@/config/settings";
 import { cancelBookingAction, createBookingAction, updateBookingAction } from "@/app/actions";
 import type { PlanningRoom } from "@/lib/planning";
 import { addDaysToKey } from "@/lib/time";
+import { readableTextOn } from "@/lib/color";
+import { RoomIcon } from "./RoomIcon";
 
 export type DialogState =
   | { mode: "create"; roomId: string; date: string; startTime: string; endTime: string; title: string }
@@ -35,9 +37,10 @@ interface Props {
   users: { id: string; name: string }[];
   currentUserId: string;
   onClose: () => void;
+  onDone?: (kind: "created" | "updated" | "cancelled", message?: string) => void;
 }
 
-export function BookingDialog({ state, rooms, users, currentUserId, onClose }: Props) {
+export function BookingDialog({ state, rooms, users, currentUserId, onClose, onDone }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,20 +50,21 @@ export function BookingDialog({ state, rooms, users, currentUserId, onClose }: P
   const editing = state.mode === "edit";
   const readOnly = editing && state.ended;
 
-  function done(result: { ok: boolean; error?: string; message?: string }) {
+  function done(kind: "created" | "updated" | "cancelled", result: { ok: boolean; error?: string; message?: string }) {
     if (!result.ok) {
       setError(result.error ?? "Erreur inattendue.");
       return;
     }
-    if (result.message && result.message !== "Réservation confirmée.") window.alert(result.message);
     onClose();
+    onDone?.(kind, result.message);
     router.refresh();
   }
 
   function submit(form: FormData) {
     setError(null);
     startTransition(async () => {
-      done(editing ? await updateBookingAction(form) : await createBookingAction(form));
+      if (editing) done("updated", await updateBookingAction(form));
+      else done("created", await createBookingAction(form));
     });
   }
 
@@ -72,27 +76,36 @@ export function BookingDialog({ state, rooms, users, currentUserId, onClose }: P
         : "Annuler cette réservation ?";
     if (!window.confirm(question)) return;
     setError(null);
-    startTransition(async () => done(await cancelBookingAction(state.id, scope)));
+    startTransition(async () => done("cancelled", await cancelBookingAction(state.id, scope)));
   }
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" role="dialog" aria-modal="true">
         <h2>
-          {editing ? (readOnly ? "Réservation terminée" : "Modifier la réservation") : "Nouvelle réservation"}
+          {editing ? (readOnly ? "Réservation terminée" : "Modifier la réservation") : "Nouvelle réservation ✨"}
           {editing && <span className="muted" style={{ fontWeight: 400 }}> · {state.ownerName}</span>}
         </h2>
         {error && <div className="alert error">{error}</div>}
         <form action={submit}>
           {editing && <input type="hidden" name="id" value={state.id} />}
-          <fieldset disabled={readOnly || pending} style={{ border: "none", padding: 0, margin: 0 }}>
-            <div className="field">
-              <label htmlFor="roomId">Salle</label>
-              <select id="roomId" name="roomId" defaultValue={state.roomId}>
+          <fieldset disabled={readOnly || pending}>
+            <div className="field" role="radiogroup" aria-label="Salle">
+              <span className="field-title">Salle</span>
+              <div className="room-picker">
                 {rooms.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name} ({r.capacity} pers.)</option>
+                  <label key={r.id} className="room-card">
+                    <input type="radio" name="roomId" value={r.id} defaultChecked={r.id === state.roomId} required />
+                    <span className="face">
+                      <span className="icon" style={{ background: r.color, color: readableTextOn(r.color) }}>
+                        <RoomIcon capacity={r.capacity} />
+                      </span>
+                      <span className="name">{r.name}</span>
+                      <span className="cap">{r.capacity} pers.</span>
+                    </span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
             <div className="row">
               <div className="field">

@@ -18,7 +18,7 @@
   --accent: var(--sicaap-orange);  /* aujourd'hui, heure actuelle */
   --accent-soft: #fff6d1;          /* fond du jour courant (secondaire) */
 
-  --bg: #f6f8f8;
+  --bg: #f4f8f7;
   --surface: #ffffff;
   --text: #2f3e47;                 /* gris anthracite (complémentaire) */
   --muted: #6c7a83;
@@ -29,7 +29,12 @@
   --success-soft: #e3f5ec;
   --closed: #eceff1;
 
-  --radius: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow: 0 4px 14px rgba(1, 89, 89, .08);
+  --shadow-lg: 0 14px 40px rgba(1, 89, 89, .12);
+  --bounce: cubic-bezier(.34, 1.56, .64, 1); /* rebond léger des animations */
   /* Polices de la charte, présentes sur les postes Windows / Office.
      Repli sur des équivalents libres (URW Gothic, Carlito) puis polices système. */
   --font-title: "Century Gothic", "URW Gothic", "URW Gothic L", "Avant Garde", "Didact Gothic", system-ui, sans-serif;

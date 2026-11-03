@@ -15,7 +15,7 @@ export default async function PlanningPage({ searchParams }: { searchParams: Pro
     <>
       <Header user={user} />
       <main>
-        <WeekPlanning data={data} isAdmin={user.role === "ADMIN"} currentUserId={user.id} />
+        <WeekPlanning data={data} isAdmin={user.role === "ADMIN"} currentUserId={user.id} userName={user.name} />
       </main>
     </>
   );
