@@ -328,3 +328,29 @@ fieldset { border: none; padding: 0; margin: 0; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .confetti { display: none; }
 }
+
+/* =============================================================================
+   Bouton « Ajouter à mon agenda »
+   ============================================================================= */
+.cal-add { position: relative; display: inline-block; }
+.cal-menu {
+  position: absolute; z-index: 70; right: 0; bottom: calc(100% + 8px); min-width: 280px;
+  background: var(--surface); color: var(--text); border-radius: 16px; padding: 6px;
+  box-shadow: 0 16px 40px rgba(1, 50, 50, .25); border: 1px solid var(--border);
+  animation: rise .25s var(--bounce) both; text-align: left;
+}
+.cal-menu.below, .cal-add.below .cal-menu { bottom: auto; top: calc(100% + 8px); }
+.cal-menu a { display: block; padding: 10px 12px; border-radius: 12px; text-decoration: none; color: var(--text); }
+.cal-menu a:hover, .cal-menu a:focus-visible { background: var(--brand-soft); }
+.cal-menu strong { display: block; font-size: 14px; color: var(--brand); }
+.cal-menu span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+
+/* Notification avec actions */
+.toast.with-actions { border-radius: 22px; padding: 14px 16px 14px 22px; flex-wrap: wrap; max-width: calc(100vw - 32px); }
+.toast .toast-text { display: flex; flex-direction: column; }
+.toast .toast-text small { font-weight: 400; opacity: .9; font-size: 13px; }
+.toast .toast-close { background: transparent; border: none; color: #fff; padding: 4px 8px; font-size: 18px; box-shadow: none; }
+.toast .toast-close:hover { transform: none; box-shadow: none; opacity: .8; }
+.toast .cal-add button.secondary { background: #fff; border-color: #fff; }
+.modal .cal-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 16px; border-radius: 14px; background: var(--brand-soft); }
+.modal .cal-row p { margin: 0; flex: 1; font-size: 13px; }

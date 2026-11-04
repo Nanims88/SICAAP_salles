@@ -18,7 +18,7 @@ export default async function MyBookingsPage() {
       <main>
         <div className="card">
           <h2>Mes réservations à venir ({rows.length})</h2>
-          <BookingTable rows={rows} />
+          <BookingTable rows={rows} withCalendar />
         </div>
       </main>
     </>

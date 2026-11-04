@@ -17,6 +17,7 @@ Planning de réservation des **2 box** et des **2 salles de réunion** (petite e
 | Droits | Modification / annulation par l'auteur et les admins |
 | Comptes | E-mail + mot de passe ; créés par un admin avec mot de passe provisoire à changer à la 1re connexion |
 | E-mails | Confirmation, modification, annulation, avec invitation **.ics** (Outlook) — en V1, écrits dans les logs |
+| Agenda Outlook | Bouton « Ajouter à mon agenda » : Outlook en ligne (événement pré-rempli) ou fichier `.ics` pour Outlook installé (toute la série pour une réservation récurrente) — aucune configuration Microsoft 365 requise |
 | Vue | Semaine, toutes salles (une couleur par salle) |
 
 Pages : **Planning**, **Mes réservations**, **Administration** (Salles, Utilisateurs, Fermetures, Réservations).

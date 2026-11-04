@@ -8,6 +8,8 @@ import type { PlanningRoom } from "@/lib/planning";
 import { addDaysToKey } from "@/lib/time";
 import { readableTextOn } from "@/lib/color";
 import { RoomIcon } from "./RoomIcon";
+import { AddToCalendar } from "./AddToCalendar";
+import type { BookingInfo } from "@/lib/bookings";
 
 export type DialogState =
   | { mode: "create"; roomId: string; date: string; startTime: string; endTime: string; title: string }
@@ -22,6 +24,10 @@ export type DialogState =
       ownerName: string;
       isSeries: boolean;
       ended: boolean;
+      /** Réservation de l'utilisateur connecté (bouton « Ajouter à mon agenda »). */
+      mine: boolean;
+      start: string;
+      end: string;
     };
 
 const OPEN = SETTINGS.openingHour * 60;
@@ -37,7 +43,7 @@ interface Props {
   users: { id: string; name: string }[];
   currentUserId: string;
   onClose: () => void;
-  onDone?: (kind: "created" | "updated" | "cancelled", message?: string) => void;
+  onDone?: (kind: "created" | "updated" | "cancelled", message?: string, booking?: BookingInfo) => void;
 }
 
 export function BookingDialog({ state, rooms, users, currentUserId, onClose, onDone }: Props) {
@@ -50,13 +56,13 @@ export function BookingDialog({ state, rooms, users, currentUserId, onClose, onD
   const editing = state.mode === "edit";
   const readOnly = editing && state.ended;
 
-  function done(kind: "created" | "updated" | "cancelled", result: { ok: boolean; error?: string; message?: string }) {
+  function done(kind: "created" | "updated" | "cancelled", result: { ok: boolean; error?: string; message?: string; booking?: BookingInfo }) {
     if (!result.ok) {
       setError(result.error ?? "Erreur inattendue.");
       return;
     }
     onClose();
-    onDone?.(kind, result.message);
+    onDone?.(kind, result.message, result.booking);
     router.refresh();
   }
 
@@ -87,6 +93,23 @@ export function BookingDialog({ state, rooms, users, currentUserId, onClose, onD
           {editing && <span className="muted" style={{ fontWeight: 400 }}> · {state.ownerName}</span>}
         </h2>
         {error && <div className="alert error">{error}</div>}
+        {state.mode === "edit" && state.mine && !state.ended && (
+          <div className="cal-row">
+            <p>Pas encore dans votre agenda Outlook ?</p>
+            <AddToCalendar
+              compact
+              placement="below"
+              booking={{
+                id: state.id,
+                start: state.start,
+                end: state.end,
+                title: state.title || null,
+                roomName: rooms.find((r) => r.id === state.roomId)?.name ?? "",
+                isSeries: state.isSeries,
+              }}
+            />
+          </div>
+        )}
         <form action={submit}>
           {editing && <input type="hidden" name="id" value={state.id} />}
           <fieldset disabled={readOnly || pending}>
