@@ -8,6 +8,8 @@ import { readableTextOn } from "@/lib/color";
 import { addDaysToKey, formatDateLong, isoWeekday, parisDateKey, parisMinutesOfDay, parisTime } from "@/lib/time";
 import { BookingDialog, type DialogState } from "./BookingDialog";
 import { RoomIcon } from "./RoomIcon";
+import { AddToCalendar } from "./AddToCalendar";
+import type { BookingInfo } from "@/lib/bookings";
 
 const SLOT_H = 28; // hauteur d'un créneau de 30 min, en pixels
 const OPEN = SETTINGS.openingHour * 60;
@@ -45,14 +47,22 @@ interface Props {
 
 export function WeekPlanning({ data, isAdmin, currentUserId, userName }: Props) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
-  const [toast, setToast] = useState<{ text: string; emoji: string; id: number } | null>(null);
+  const [toast, setToast] = useState<{
+    text: string;
+    emoji: string;
+    id: number;
+    note?: string;
+    booking?: BookingInfo;
+    actionLabel?: string;
+  } | null>(null);
   const now = new Date(data.now);
   const today = parisDateKey(now);
   const nowMin = parisMinutesOfDay(now);
 
   useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3200);
+    // Une notification avec bouton reste affichée jusqu'à sa fermeture.
+    if (!toast || toast.booking) return;
+    const t = setTimeout(() => setToast(null), toast.note ? 7000 : 3200);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -123,17 +133,35 @@ export function WeekPlanning({ data, isAdmin, currentUserId, userName }: Props) 
       ownerName: b.ownerName,
       isSeries: b.isSeries,
       ended: e < now,
+      mine: b.mine,
+      start: b.start,
+      end: b.end,
     });
   }
 
-  function onDone(kind: "created" | "updated" | "cancelled", message?: string) {
-    const presets = {
-      created: { emoji: "🎉", text: "C'est réservé !" },
-      updated: { emoji: "✨", text: "Réservation modifiée" },
-      cancelled: { emoji: "👋", text: "Réservation annulée" },
-    } as const;
-    const p = presets[kind];
-    setToast({ emoji: p.emoji, text: message && kind === "created" && message !== "Réservation confirmée." ? message : p.text, id: Date.now() });
+  function onDone(kind: "created" | "updated" | "cancelled", message?: string, booking?: BookingInfo) {
+    const id = Date.now();
+    const withCal = booking?.mine ? booking : undefined;
+    if (kind === "created") {
+      setToast({
+        id,
+        emoji: "🎉",
+        text: message && message !== "Réservation confirmée." ? message : "C'est réservé !",
+        note: withCal ? (withCal.isSeries ? "Ajoutez toute la série à votre agenda Outlook :" : "Ajoutez-la à votre agenda Outlook :") : undefined,
+        booking: withCal,
+      });
+    } else if (kind === "updated") {
+      setToast({
+        id,
+        emoji: "✨",
+        text: "Réservation modifiée",
+        note: withCal ? "Supprimez l'ancien événement de votre agenda, puis ajoutez le nouveau :" : undefined,
+        booking: withCal,
+        actionLabel: "Mettre à jour mon agenda",
+      });
+    } else {
+      setToast({ id, emoji: "👋", text: "Réservation annulée", note: "Pensez à la retirer de votre agenda Outlook." });
+    }
   }
 
   return (
@@ -323,9 +351,16 @@ export function WeekPlanning({ data, isAdmin, currentUserId, userName }: Props) 
               ))}
             </div>
           )}
-          <div className="toast" role="status" key={toast.id}>
+          <div className={`toast${toast.booking ? " with-actions" : ""}`} role="status" key={toast.id}>
             <span className="emoji" aria-hidden="true">{toast.emoji}</span>
-            {toast.text}
+            <span className="toast-text">
+              {toast.text}
+              {toast.note && <small>{toast.note}</small>}
+            </span>
+            {toast.booking && <AddToCalendar booking={toast.booking} label={toast.actionLabel} />}
+            {toast.booking && (
+              <button type="button" className="toast-close" aria-label="Fermer" onClick={() => setToast(null)}>×</button>
+            )}
           </div>
         </>
       )}

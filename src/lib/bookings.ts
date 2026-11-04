@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma, type Booking, type Room, type User } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { calendarSummary } from "@/lib/calendar-links";
 import { buildIcs, type IcsMethod } from "@/lib/ics";
 import { sendMail, senderAddress } from "@/lib/mailer";
 import { weeklyOccurrences, type Occurrence } from "@/lib/recurrence";
@@ -9,7 +10,19 @@ import { validateSlot, type ClosureLike } from "@/lib/rules";
 import { dbDateToKey, formatDateLong, parisDateKey, parisTime } from "@/lib/time";
 import type { CurrentUser } from "@/lib/auth";
 
-export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+/** Réservation renvoyée à l'interface (bouton « Ajouter à mon agenda »). */
+export interface BookingInfo {
+  id: string;
+  start: string;
+  end: string;
+  title: string | null;
+  roomName: string;
+  isSeries: boolean;
+  /** Vrai si la réservation appartient à l'utilisateur connecté. */
+  mine: boolean;
+}
+
+export type ActionResult = { ok: true; message?: string; booking?: BookingInfo } | { ok: false; error: string };
 
 export class BookingError extends Error {}
 
@@ -61,7 +74,7 @@ export function canManage(user: CurrentUser, booking: Pick<Booking, "ownerId">):
 // ---------------------------------------------------------------------------
 
 function summaryOf(room: Room, title: string | null): string {
-  return title ? `${room.name} – ${title}` : `Réservation ${room.name}`;
+  return calendarSummary(room.name, title);
 }
 
 async function notify(
@@ -215,7 +228,20 @@ export async function createBooking(user: CurrentUser, input: CreateBookingInput
   const message = seriesId
     ? `${occurrences.length} réservations créées.${skipped.length ? ` ${skipped.length} date(s) ignorée(s) (jour férié, fermeture ou hors délai).` : ""}`
     : "Réservation confirmée.";
-  return { ok: true, message };
+  const firstRow = createdRows[0];
+  return {
+    ok: true,
+    message,
+    booking: {
+      id: firstRow.id,
+      start: firstRow.start.toISOString(),
+      end: firstRow.end.toISOString(),
+      title: firstRow.title,
+      roomName: room.name,
+      isSeries: seriesId !== null,
+      mine: owner.id === user.id,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -274,7 +300,19 @@ export async function updateBooking(user: CurrentUser, input: UpdateBookingInput
       recurrenceId: booking.seriesId ? booking.originalStart ?? booking.start : undefined,
     },
   );
-  return { ok: true, message: "Réservation modifiée." };
+  return {
+    ok: true,
+    message: "Réservation modifiée.",
+    booking: {
+      id: booking.id,
+      start: input.start.toISOString(),
+      end: input.end.toISOString(),
+      title: input.title,
+      roomName: room.name,
+      isSeries: booking.seriesId !== null,
+      mine: booking.ownerId === user.id,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------

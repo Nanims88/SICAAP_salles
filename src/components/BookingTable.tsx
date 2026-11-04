@@ -1,3 +1,4 @@
+import { AddToCalendar } from "@/components/AddToCalendar";
 import { CancelButton } from "@/components/CancelButton";
 import { formatDateLong, parisDateKey, parisTime } from "@/lib/time";
 
@@ -11,7 +12,7 @@ export interface BookingRow {
   owner?: { name: string };
 }
 
-export function BookingTable({ rows, showOwner }: { rows: BookingRow[]; showOwner?: boolean }) {
+export function BookingTable({ rows, showOwner, withCalendar }: { rows: BookingRow[]; showOwner?: boolean; withCalendar?: boolean }) {
   if (rows.length === 0) return <p className="muted">Aucune réservation à venir.</p>;
   return (
     <table>
@@ -28,7 +29,26 @@ export function BookingTable({ rows, showOwner }: { rows: BookingRow[]; showOwne
             <td><span className="swatch" style={{ background: b.room.color }} />{b.room.name}</td>
             {showOwner && <td>{b.owner?.name}</td>}
             <td>{b.title ?? <span className="muted">—</span>} {b.seriesId && <span className="badge">récurrent</span>}</td>
-            <td style={{ textAlign: "right" }}><CancelButton id={b.id} isSeries={!!b.seriesId} /></td>
+            <td style={{ textAlign: "right" }}>
+              <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                {withCalendar && (
+                  <AddToCalendar
+                    compact
+                    placement="below"
+                    label="Agenda"
+                    booking={{
+                      id: b.id,
+                      start: b.start.toISOString(),
+                      end: b.end.toISOString(),
+                      title: b.title,
+                      roomName: b.room.name,
+                      isSeries: !!b.seriesId,
+                    }}
+                  />
+                )}
+                <CancelButton id={b.id} isSeries={!!b.seriesId} />
+              </span>
+            </td>
           </tr>
         ))}
       </tbody>
